@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from datamodel import tests
 
@@ -138,7 +138,7 @@ class Move(models.Model):
         super(Move, self).save(*args, **kwargs)
 
 
-COUNTER_ERROR = "Not an allowed action|Accion no permitida"
+COUNTER_ERROR = "Insert not allowed|Inseción no permitida"
 
 
 class CounterManager(models.Manager):
@@ -148,9 +148,30 @@ class CounterManager(models.Manager):
 
     @classmethod
     def __createCounter(self, int):
-        self.counter = Counter(value=int)
-        super(Counter, self.counter).save()
-        return self.counter
+        counter = Counter(value=int)
+        super(Counter, counter).save()
+        return counter
+    
+    def inc(self):
+        try:
+            c = Counter.objects.all()[0]
+
+        except IndexError:
+            c = CounterManager.__createCounter(1)
+            return c.value
+
+        c.value += 1
+        super(Counter, c).save()    
+        return c.value
+    
+    def get_current_value(self):
+        try:
+            c = Counter.objects.all()[0]
+
+        except IndexError:
+            c = CounterManager.__createCounter(0)
+
+        return c.value
 
 
 class Counter(models.Model):
