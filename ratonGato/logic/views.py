@@ -1,8 +1,10 @@
 from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
+from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
 
 from datamodel import constants
-
+from logic.forms import loginForm
 
 def anonymous_required(f):
     def wrapped(request):
@@ -23,10 +25,29 @@ def errorHTTP(request, exception=None):
 def index(request):
     return render(request, "mouse_cat/index.html")
 
+@anonymous_required
 def login(request):
-    return render(request, "mouse_cat/login.html")
+
+    form = loginForm()    
+
+    if request.method == 'POST':
+        form = loginForm(data=request.POST)
+
+        if form.is_valid():
+            
+            user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
+            
+            djangologin(request, user)
+            request.session.modified = True
+            return redirect('index')
+        
+        return render(request, "mouse_cat/login.html", {'user_form': form})
+
+    return render(request, "mouse_cat/login.html", {'user_form': form})
+
 
 def logout(request):
+    djangologout(request)
     return render(request, "mouse_cat/logout.html")
 
 def signup(request):
