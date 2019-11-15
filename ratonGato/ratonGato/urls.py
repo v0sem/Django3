@@ -15,7 +15,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from logic import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.index, name='landing'),
+    path('index/', views.index, name='index'),
+    path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout'),
+    path('signup/', views.signup, name='signup'),
+    path('counter/', views.counter, name='counter'),
+    path('create_game/', views.create_game, name='create_game'),
+    path('select_game/', views.select_game, name='select_game'),
+    path('join_game/', views.join_game, name='join_game'),
+    path('show_game/', views.show_game, name='show_game'),
+    path('move/', views.move, name='move'),
 ]
