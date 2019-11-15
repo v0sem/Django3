@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, reverse
 from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
 
 from datamodel import constants
-from logic.forms import loginForm
+from logic.forms import loginForm, SignupForm
 
 def anonymous_required(f):
     def wrapped(request):
@@ -41,17 +41,31 @@ def login(request):
             request.session.modified = True
             return redirect('index')
         
-        return render(request, "mouse_cat/login.html", {'user_form': form})
 
     return render(request, "mouse_cat/login.html", {'user_form': form})
 
 
+@login_required
 def logout(request):
     djangologout(request)
     return render(request, "mouse_cat/logout.html")
 
+@anonymous_required
 def signup(request):
-    return render(request, "mouse_cat/signup.html")
+    form = SignupForm()
+
+    if request.method == 'POST':
+        form = SignupForm(data=request.POST)
+
+        if form.is_valid():
+            user = form.save()
+            user.save()
+            djangologin(request, user)
+            request.session['counter'] = 0
+            form = None
+
+
+    return render(request, "mouse_cat/signup.html", {'user_form': form})
 
 def counter(request):
     return render(request, "mouse_cat/counter.html")
