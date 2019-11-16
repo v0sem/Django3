@@ -2,6 +2,7 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
+from datamodel.models import Game, Move, Counter, GameStatus
 
 from datamodel import constants
 from logic.forms import loginForm, SignupForm
@@ -70,8 +71,17 @@ def signup(request):
 def counter(request):
     return render(request, "mouse_cat/counter.html")
 
+
+@login_required
 def create_game(request):
-    return render(request, "mouse_cat/new_game.html")
+
+    user = request.user
+    game = Game(cat_user=user)
+    game.save()
+
+    context_dict = {'game': game}
+
+    return render(request, "mouse_cat/new_game.html", context_dict)
 
 def select_game(request):
     return render(request, "mouse_cat/select_game.html")
