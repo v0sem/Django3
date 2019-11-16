@@ -39,6 +39,7 @@ def login(request):
             user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
             
             djangologin(request, user)
+            request.session['counter'] = 0
             request.session.modified = True
             return redirect('index')
         
@@ -49,6 +50,7 @@ def login(request):
 @login_required
 def logout(request):
     djangologout(request)
+    request.session['counter'] = 0
     return render(request, "mouse_cat/logout.html")
 
 @anonymous_required
@@ -69,7 +71,16 @@ def signup(request):
     return render(request, "mouse_cat/signup.html", {'user_form': form})
 
 def counter(request):
-    return render(request, "mouse_cat/counter.html")
+
+    if 'counter' in request.session:
+        request.session['counter'] += 1
+    else:
+        request.session['counter'] = 1
+
+    counter_global = Counter.objects.inc()
+
+    return render(request, "mouse_cat/counter.html", {'counter_session': request.session['counter'],
+                                                    'counter_global': counter_global})
 
 
 @login_required
@@ -79,9 +90,7 @@ def create_game(request):
     game = Game(cat_user=user)
     game.save()
 
-    context_dict = {'game': game}
-
-    return render(request, "mouse_cat/new_game.html", context_dict)
+    return render(request, "mouse_cat/new_game.html", {'game': game})
 
 def select_game(request):
     return render(request, "mouse_cat/select_game.html")
