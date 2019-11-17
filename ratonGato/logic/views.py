@@ -1,4 +1,4 @@
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
@@ -95,10 +95,8 @@ def create_game(request):
 @login_required
 def select_game(request, game_id=-1):
     user = request.user
-    # Parte de GET
-    # if request.method == 'GET':
+
     if game_id == -1:
-        # print("\n\nEEEOO HE ENTRADO EN GEEET\n\n")
         context_dict = {}
         as_cat = Game.objects.filter(cat_user=user, status=GameStatus.ACTIVE)
         if as_cat:
@@ -111,13 +109,9 @@ def select_game(request, game_id=-1):
 
         return render(request, "mouse_cat/select_game.html", context_dict)
     else:
-        # Parte de POST
-        # if request.method == 'POST':
-        # print("\n\nEEEOO HE ENTRADO EN POOOST\n\n")
-        # game_id = request.POST.get('game_id')
         game = Game.objects.filter(id=game_id).first()
         if not game or game.status != GameStatus.ACTIVE:
-            return render(request, "mouse_cat/select_game.html")
+            raise Http404
         else:
             if game.cat_user == user or game.mouse_user == user:
 
@@ -125,7 +119,7 @@ def select_game(request, game_id=-1):
                 return redirect(reverse('show_game'))
 
             else:
-                return render(request, "mouse_cat/select_game.html")
+                raise Http404
 
 def show_game(request):
     return render(request, "mouse_cat/game.html")
