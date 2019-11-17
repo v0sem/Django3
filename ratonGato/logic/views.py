@@ -1,17 +1,21 @@
-from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.http import Http404, \
+    HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
-from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
+from django.contrib.auth import authenticate, login as djangologin, \
+    logout as djangologout
 from datamodel.models import Game, Move, Counter, GameStatus
 
 from datamodel import constants
 from logic.forms import loginForm, SignupForm, MoveForm
 
+
 def anonymous_required(f):
     def wrapped(request):
         if request.user.is_authenticated:
             return HttpResponseForbidden(
-                errorHTTP(request, exception="Action restricted to anonymous users"))
+                errorHTTP(request,
+                          exception="Action restricted to anonymous users"))
         else:
             return f(request)
     return wrapped
@@ -26,23 +30,24 @@ def errorHTTP(request, exception=None):
 def index(request):
     return render(request, "mouse_cat/index.html")
 
+
 @anonymous_required
 def login(request):
 
-    form = loginForm()    
+    form = loginForm()
 
     if request.method == 'POST':
         form = loginForm(data=request.POST)
 
         if form.is_valid():
-            
-            user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
-            
+
+            user = authenticate(username=request.POST.get('username'),
+                                password=request.POST.get('password'))
+
             djangologin(request, user)
             request.session['counter'] = 0
             request.session.modified = True
             return redirect('index')
-        
 
     return render(request, "mouse_cat/login.html", {'user_form': form})
 
@@ -52,6 +57,7 @@ def logout(request):
     djangologout(request)
     request.session['counter'] = 0
     return render(request, "mouse_cat/logout.html")
+
 
 @anonymous_required
 def signup(request):
@@ -67,8 +73,8 @@ def signup(request):
             request.session['counter'] = 0
             form = None
 
-
     return render(request, "mouse_cat/signup.html", {'user_form': form})
+
 
 def counter(request):
 
@@ -79,8 +85,9 @@ def counter(request):
 
     counter_global = Counter.objects.inc()
 
-    return render(request, "mouse_cat/counter.html", {'counter_session': request.session['counter'],
-                                                    'counter_global': counter_global})
+    return render(request, "mouse_cat/counter.html",
+                  {'counter_session': request.session['counter'],
+                   'counter_global': counter_global})
 
 
 @login_required
@@ -91,6 +98,7 @@ def create_game(request):
     game.save()
 
     return render(request, "mouse_cat/new_game.html", {'game': game})
+
 
 @login_required
 def select_game(request, game_id=-1):
@@ -145,8 +153,9 @@ def show_game(request):
 
     move = MoveForm(game=game)
 
+    return render(request, "mouse_cat/game.html",
+                  {'game': game, 'board': board, 'move_form': move})
 
-    return render(request, "mouse_cat/game.html", {'game': game, 'board': board, 'move_form': move})
 
 @login_required
 def join_game(request):
@@ -176,7 +185,8 @@ def move(request):
             move_form = MoveForm(game=game, data=request.POST)
             if move_form.is_valid():
                 move = Move(
-                    game=game, player=request.user, origin=int(move_form.data['origin']),
+                    game=game, player=request.user,
+                    origin=int(move_form.data['origin']),
                     target=int(move_form.data['target']))
                 move.save()
                 if game.status == GameStatus.FINISHED:
