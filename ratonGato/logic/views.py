@@ -1,11 +1,11 @@
-from django.http import HttpResponseForbidden, Http404
+from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
 from datamodel.models import Game, Move, Counter, GameStatus
 
 from datamodel import constants
-from logic.forms import loginForm, SignupForm
+from logic.forms import loginForm, SignupForm, MoveForm
 
 def anonymous_required(f):
     def wrapped(request):
@@ -121,8 +121,32 @@ def select_game(request, game_id=-1):
             else:
                 raise Http404
 
+
+@login_required
 def show_game(request):
-    return render(request, "mouse_cat/game.html")
+
+    g_id = request.session['game_id']
+    game = Game.objects.get(pk=g_id)
+
+    board = []
+    for i in range(0, 64):
+        if game.mouse == i:
+            board.append(-1)
+        elif game.cat1 == i:
+            board.append(1)
+        elif game.cat2 == i:
+            board.append(1)
+        elif game.cat3 == i:
+            board.append(1)
+        elif game.cat4 == i:
+            board.append(1)
+        else:
+            board.append(0)
+
+    move = MoveForm(game=game)
+
+
+    return render(request, "mouse_cat/game.html", {'game': game, 'board': board, 'move_form': move})
 
 @login_required
 def join_game(request):
@@ -140,5 +164,23 @@ def join_game(request):
         game.save()
         return render(request, "mouse_cat/join_game.html", {'game': game})
 
+
+@login_required
 def move(request):
-    return render(request, reverse("show_game"))
+    if 'game_id' in request.session.keys():
+        game_id = request.session['game_id']
+
+        if request.method == 'POST':
+
+            game = Game.objects.get(id=game_id)
+            move_form = MoveForm(game=game, data=request.POST)
+            if move_form.is_valid():
+                move = Move(
+                    game=game, player=request.user, origin=int(move_form.data['origin']),
+                    target=int(move_form.data['target']))
+                move.save()
+                if game.status == GameStatus.FINISHED:
+                    return HttpResponse('<h1>You won</h1>')
+            return redirect(reverse('show_game'))
+
+    return HttpResponseNotFound('<h1>Page Not Found</h1>')

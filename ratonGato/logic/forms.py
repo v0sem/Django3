@@ -62,3 +62,34 @@ class loginForm(AuthenticationForm):
     class Meta:
         model = User
         fields = ('username', 'password')
+    
+
+class MoveForm(forms.Form):
+    
+    origin = forms.IntegerField(initial=0, required=True)
+    target = forms.IntegerField(initial=0, required=True)
+
+    def __init__(self, *args, game=None, **kwargs):
+        self.game = game
+        super(MoveForm, self).__init__(*args, **kwargs)
+    
+    def is_valid(self):
+        move = Move()
+        if self.game == None:
+            if move.valid_nogame(self.data['origin'], self.data['target']):
+               return super(MoveForm, self).is_valid()
+            return False 
+        else:
+            if self.game.cat_turn:
+                if move.valid(self.game, self.game.cat_user, self.data['origin'], self.data['target']):
+                    return super(MoveForm, self).is_valid()
+            else:
+                if move.valid(self.game, self.game.mouse_user, self.data['origin'], self.data['target']):
+                    return super(MoveForm, self).is_valid()
+        
+        return False
+
+
+    class Meta:
+        model = Move
+        fields = ('origin', 'target')
