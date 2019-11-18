@@ -1,10 +1,9 @@
 from django import forms
-from datamodel.models import Move
+from datamodel.models import Move, Game
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.exceptions import ValidationError
-from django.contrib.auth.password_validation import MinimumLengthValidator, \
-    NumericPasswordValidator, CommonPasswordValidator
+from django.contrib.auth.password_validation import MinimumLengthValidator, NumericPasswordValidator, CommonPasswordValidator
 from django.contrib.auth import password_validation, authenticate
 
 from logic import tests_services
@@ -12,17 +11,15 @@ from logic import tests_services
 
 class SignupForm(forms.ModelForm):
 
-    password = forms.CharField(label='Enter password',
-                               required=True, widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Enter password again',
-                                required=True, widget=forms.PasswordInput)
+    password = forms.CharField(label='Enter password', required=True, widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Enter password again', required=True, widget=forms.PasswordInput)
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
         password_validation.validate_password(password,
-                  password_validators=(MinimumLengthValidator(min_length=6),
-                                       NumericPasswordValidator(),
-                                       CommonPasswordValidator()))
+                                              password_validators=(MinimumLengthValidator(min_length=6),
+                                                                   NumericPasswordValidator(),
+                                                                   CommonPasswordValidator()))
         return password
 
     def clean_password2(self):
@@ -30,8 +27,7 @@ class SignupForm(forms.ModelForm):
         password2 = self.cleaned_data.get('password2')
 
         if password != password2:
-            raise ValidationError("Password and Repeat password are not the "
-                                  "same|La clave y su repetición no coinciden")
+            raise ValidationError("Password and Repeat password are not the same|La clave y su repetición no coinciden")
 
         return password2
 
@@ -79,18 +75,16 @@ class MoveForm(forms.Form):
 
     def is_valid(self):
         move = Move()
-        if self.game is None:
+        if self.game == None:
             if move.valid_nogame(self.data['origin'], self.data['target']):
                 return super(MoveForm, self).is_valid()
             return False
         else:
             if self.game.cat_turn:
-                if move.valid(self.game, self.game.cat_user,
-                              self.data['origin'], self.data['target']):
+                if move.valid(self.game, self.game.cat_user, self.data['origin'], self.data['target']):
                     return super(MoveForm, self).is_valid()
             else:
-                if move.valid(self.game, self.game.mouse_user,
-                              self.data['origin'], self.data['target']):
+                if move.valid(self.game, self.game.mouse_user, self.data['origin'], self.data['target']):
                     return super(MoveForm, self).is_valid()
 
         return False

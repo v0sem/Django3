@@ -10,20 +10,18 @@ class GameStatus(models.Model):
     ACTIVE = 'Active'
     FINISHED = 'Finished'
 
-    CHOICE = [(CREATED, 'CREATED'), (ACTIVE, 'ACTIVE'), (FINISHED, 'FINISHED')]
+    CHOICE = [(CREATED, 'CREATED'),
+              (ACTIVE, 'ACTIVE'),
+              (FINISHED, 'FINISHED')]
+
 
 # Create your models here.
-
-
 class Game(models.Model):
     MIN_CELL = 0
     MAX_CELL = 63
 
-    cat_user = models.ForeignKey(User, on_delete=models.CASCADE,
-                                 related_name="games_as_cat")
-    mouse_user = models.ForeignKey(User, on_delete=models.CASCADE,
-                                   related_name="games_as_mouse",
-                                   null=True, blank=True)
+    cat_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="games_as_cat")
+    mouse_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="games_as_mouse", null=True, blank=True)
 
     cat1 = models.IntegerField(null=False, default=0, validators=[
             MaxValueValidator(MAX_CELL),
@@ -47,44 +45,29 @@ class Game(models.Model):
         ])
     cat_turn = models.BooleanField(null=False, default=True)
 
-    status = models.CharField(max_length=15, default=GameStatus.CREATED,
-                              choices=GameStatus.CHOICE)
+    status = models.CharField(max_length=15, default=GameStatus.CREATED, choices=GameStatus.CHOICE)
 
     def __str__(self):
         string = "({}, {})".format(self.id, self.status)
 
         if self.cat_turn:
-            string = string + \
-                     '\tCat [X] {}({}, {}, {}, {})'.format(self.cat_user,
-                                                           self.cat1,
-                                                           self.cat2,
-                                                           self.cat3,
-                                                           self.cat4)
+            string = string + '\tCat [X] {}({}, {}, {}, {})'.format(self.cat_user, self.cat1,
+                                                                    self.cat2, self.cat3, self.cat4)
         else:
-            string = string + \
-                     '\tCat [ ] {}({}, {}, {}, {})'.format(self.cat_user,
-                                                           self.cat1,
-                                                           self.cat2,
-                                                           self.cat3,
-                                                           self.cat4)
+            string = string + '\tCat [ ] {}({}, {}, {}, {})'.format(self.cat_user, self.cat1,
+                                                                    self.cat2, self.cat3, self.cat4)
 
-        if hasattr(self, 'mouse_user') and self.mouse_user is not None:
+        if hasattr(self, 'mouse_user') and self.mouse_user != None:
             if self.cat_turn:
-                string = string + \
-                         ' --- Mouse [ ] {}({})'.format(self.mouse_user,
-                                                        self.mouse)
+                string = string + ' --- Mouse [ ] {}({})'.format(self.mouse_user, self.mouse)
             else:
-                string = string + \
-                         ' --- Mouse [X] {}({})'.format(self.mouse_user,
-                                                        self.mouse)
+                string = string + ' --- Mouse [X] {}({})'.format(self.mouse_user, self.mouse)
 
         return string
 
+    def save(self, *args, **kwargs):
 
-def save(self, *args, **kwargs):
-
-        if (hasattr(self, 'mouse_user') and self.mouse_user is not None) \
-                and (self.status == GameStatus.CREATED):
+        if (hasattr(self, 'mouse_user') and self.mouse_user != None) and (self.status == GameStatus.CREATED):
             self.status = GameStatus.ACTIVE
 
         list_white = []
@@ -117,8 +100,7 @@ def save(self, *args, **kwargs):
 class Move(models.Model):
     origin = models.IntegerField(null=False)
     target = models.IntegerField(null=False)
-    game = models.ForeignKey(Game,
-                             on_delete=models.CASCADE, related_name="moves")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="moves")
     player = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField(null=False, auto_now=True)
 
@@ -129,15 +111,10 @@ class Move(models.Model):
         if self.game.cat_turn and self.player == self.game.cat_user:
             if self.target > Game.MAX_CELL or self.target < Game.MIN_CELL:
                 raise ValidationError(tests.MSG_ERROR_MOVE)
-            elif not self.valid(self.game,
-                                self.game.cat_user, self.origin, self.target):
+            elif not self.valid(self.game, self.game.cat_user, self.origin, self.target):
                 raise ValidationError(tests.MSG_ERROR_MOVE)
             if self.origin == self.game.cat1:
-                if self.target == self.game.mouse or \
-                        self.target == self.game.cat2 or \
-                        self.target == self.game.cat3 or\
-                        self.target == self.game.cat4:
-
+                if self.target == self.game.mouse or self.target == self.game.cat2 or self.target == self.game.cat3 or self.target == self.game.cat4:
                     raise ValidationError(tests.MSG_ERROR_MOVE)
                 self.game.cat1 = self.target
                 self.game.save()
@@ -148,11 +125,7 @@ class Move(models.Model):
                 self.game.cat_turn = False
                 self.game.save()
             elif self.origin == self.game.cat2:
-                if self.target == self.game.mouse or \
-                        self.target == self.game.cat1 or \
-                        self.target == self.game.cat3 or \
-                        self.target == self.game.cat4:
-
+                if self.target == self.game.mouse or self.target == self.game.cat1 or self.target == self.game.cat3 or self.target == self.game.cat4:
                     raise ValidationError(tests.MSG_ERROR_MOVE)
                 self.game.cat2 = self.target
                 self.game.save()
@@ -163,11 +136,7 @@ class Move(models.Model):
                 self.game.cat_turn = False
                 self.game.save()
             elif self.origin == self.game.cat3:
-                if self.target == self.game.mouse or \
-                        self.target == self.game.cat2 or \
-                        self.target == self.game.cat1 or \
-                        self.target == self.game.cat4:
-
+                if self.target == self.game.mouse or self.target == self.game.cat2 or self.target == self.game.cat1 or self.target == self.game.cat4:
                     raise ValidationError(tests.MSG_ERROR_MOVE)
                 self.game.cat3 = self.target
                 self.game.save()
@@ -178,11 +147,7 @@ class Move(models.Model):
                 self.game.cat_turn = False
                 self.game.save()
             elif self.origin == self.game.cat4:
-                if self.target == self.game.mouse or \
-                        self.target == self.game.cat2 or \
-                        self.target == self.game.cat3 or \
-                        self.target == self.game.cat1:
-
+                if self.target == self.game.mouse or self.target == self.game.cat2 or self.target == self.game.cat3 or self.target == self.game.cat1:
                     raise ValidationError(tests.MSG_ERROR_MOVE)
                 self.game.cat4 = self.target
                 self.game.save()
@@ -197,17 +162,10 @@ class Move(models.Model):
         elif not self.game.cat_turn and self.player == self.game.mouse_user:
             if self.target > Game.MAX_CELL or self.target < Game.MIN_CELL:
                 raise ValidationError(tests.MSG_ERROR_MOVE)
-            if not self.valid(self.game,
-                              self.game.mouse_user,
-                              self.origin, self.target):
+            if not self.valid(self.game, self.game.mouse_user, self.origin, self.target):
                 raise ValidationError(tests.MSG_ERROR_MOVE)
-
-            if self.target == self.game.cat1 or \
-                    self.target == self.game.cat2 or \
-                    self.target == self.game.cat3 or \
-                    self.target == self.game.cat4:
+            if self.target == self.game.cat1 or self.target == self.game.cat2 or self.target == self.game.cat3 or self.target == self.game.cat4:
                 raise ValidationError(tests.MSG_ERROR_MOVE)
-
             self.game.mouse = self.target
             self.game.save()
             if self.win():
@@ -223,35 +181,24 @@ class Move(models.Model):
 
     def win(self):
         if self.game.cat_turn:
-            for target in [self.game.mouse + 7,
-                           self.game.mouse + 9,
-                           self.game.mouse - 7,
-                           self.game.mouse - 9]:
-
-                if target == self.game.cat1 or target == self.game.cat2 \
-                        or target == self.game.cat3 or \
-                        target == self.game.cat4:
+            for target in [self.game.mouse + 7, self.game.mouse + 9, self.game.mouse - 7, self.game.mouse - 9]:
+                if target == self.game.cat1 or target == self.game.cat2 or target == self.game.cat3 or target == self.game.cat4:
                     continue
-                if self.valid(self.game, self.game.mouse_user,
-                              self.game.mouse, target):
+                if self.valid(self.game, self.game.mouse_user, self.game.mouse, target):
                     return False
             return True
         else:
             for target in [self.game.cat1 + 7, self.game.cat1 + 9]:
-                if self.valid(self.game, self.game.cat_user,
-                              self.game.cat1, target):
+                if self.valid(self.game, self.game.cat_user, self.game.cat1, target):
                     return False
             for target in [self.game.cat2 + 7, self.game.cat2 + 9]:
-                if self.valid(self.game, self.game.cat_user,
-                              self.game.cat2, target):
+                if self.valid(self.game, self.game.cat_user, self.game.cat2, target):
                     return False
             for target in [self.game.cat3 + 7, self.game.cat3 + 9]:
-                if self.valid(self.game, self.game.cat_user,
-                              self.game.cat3, target):
+                if self.valid(self.game, self.game.cat_user, self.game.cat3, target):
                     return False
             for target in [self.game.cat4 + 7, self.game.cat4 + 9]:
-                if self.valid(self.game, self.game.cat_user,
-                              self.game.cat4, target):
+                if self.valid(self.game, self.game.cat_user, self.game.cat4, target):
                     return False
             return True
 
@@ -259,24 +206,17 @@ class Move(models.Model):
         origin = int(origin)
         target = int(target)
 
-        if origin == game.cat1 or origin == game.cat2 or \
-                origin == game.cat3 or origin == game.cat4 or \
-                origin == game.mouse:
-
+        if origin == game.cat1 or origin == game.cat2 or origin == game.cat3 or origin == game.cat4 or origin == game.mouse:
             if origin == game.mouse and player == game.mouse_user:
-                if target == origin - 9 or target == origin - 7 or \
-                        target == origin + 7 or target == origin + 9 or \
-                        target == origin:
-                    if int(target / 8) != int(origin / 8) - 1 and \
-                            int(target / 8) != int(origin / 8) + 1:
+                if target == origin - 9 or target == origin - 7 or target == origin + 7 or target == origin + 9 or target == origin:
+                    if int(target / 8) != int(origin / 8) - 1 and int(target / 8) != int(origin / 8) + 1:
                         return False
                     if target < 64:
                         return True
                 return False
 
             elif player == game.cat_user:
-                if target == origin + 7 or target == origin + 9 or \
-                        target == origin:
+                if target == origin + 7 or target == origin + 9 or target == origin:
                     if int(target / 8) != int(origin / 8) + 1:
                         return False
                     if target < 64:
@@ -285,10 +225,7 @@ class Move(models.Model):
         return False
 
     def valid_nogame(self, target, origin):
-        if target == origin - 9 or target == origin - 7 or \
-                target == origin + 7 or \
-                target == origin + 9 or target == origin:
-
+        if target == origin - 9 or target == origin - 7 or target == origin + 7 or target == origin + 9 or target == origin:
             if int(target / 8) == int(origin / 8) and target != origin:
                 return False
             if target < 64:

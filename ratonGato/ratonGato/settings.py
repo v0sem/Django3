@@ -26,7 +26,7 @@ SECRET_KEY = 'f3smnus7cf-656dm%g$)7&)u)vrwlas_3+^%^pqg(-@wr4szez'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [u'thawing-fjord-69028.herokuapp.com']
+ALLOWED_HOSTS = [u'blooming-anchorage-14787.herokuapp.com']
 
 
 # Application definition
@@ -84,7 +84,8 @@ if os.getenv('SQLITE', False):
     }
 else:
     DATABASES['default'] = dj_database_url.config(
-        default='postgres://alumnodb:alumnodb@localhost:5432/ratongato')
+        default='postgres://alumnodb:alumnodb@localhost:5432/psi')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

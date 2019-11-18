@@ -1,9 +1,7 @@
-from django.http import Http404, \
-    HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
-from django.contrib.auth import authenticate, login as djangologin, \
-    logout as djangologout
+from django.contrib.auth import authenticate, login as djangologin, logout as djangologout
 from datamodel.models import Game, Move, Counter, GameStatus
 
 from datamodel import constants
@@ -14,8 +12,7 @@ def anonymous_required(f):
     def wrapped(request):
         if request.user.is_authenticated:
             return HttpResponseForbidden(
-                errorHTTP(request,
-                          exception="Action restricted to anonymous users"))
+                errorHTTP(request, exception="Action restricted to anonymous users"))
         else:
             return f(request)
     return wrapped
@@ -41,8 +38,7 @@ def login(request):
 
         if form.is_valid():
 
-            user = authenticate(username=request.POST.get('username'),
-                                password=request.POST.get('password'))
+            user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
 
             djangologin(request, user)
             request.session['counter'] = 0
@@ -85,9 +81,8 @@ def counter(request):
 
     counter_global = Counter.objects.inc()
 
-    return render(request, "mouse_cat/counter.html",
-                  {'counter_session': request.session['counter'],
-                   'counter_global': counter_global})
+    return render(request, "mouse_cat/counter.html", {'counter_session': request.session['counter'],
+                                                      'counter_global': counter_global})
 
 
 @login_required
@@ -153,8 +148,7 @@ def show_game(request):
 
     move = MoveForm(game=game)
 
-    return render(request, "mouse_cat/game.html",
-                  {'game': game, 'board': board, 'move_form': move})
+    return render(request, "mouse_cat/game.html", {'game': game, 'board': board, 'move_form': move})
 
 
 @login_required
@@ -185,8 +179,7 @@ def move(request):
             move_form = MoveForm(game=game, data=request.POST)
             if move_form.is_valid():
                 move = Move(
-                    game=game, player=request.user,
-                    origin=int(move_form.data['origin']),
+                    game=game, player=request.user, origin=int(move_form.data['origin']),
                     target=int(move_form.data['target']))
                 move.save()
                 if game.status == GameStatus.FINISHED:
